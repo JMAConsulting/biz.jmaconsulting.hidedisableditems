@@ -112,25 +112,17 @@ function hidedisableditems_civicrm_alterSettingsFolders(&$metaDataFolders = NULL
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
  */
-function hidedisableditems_civicrm_navigationMenu(&$params) {
-  $navId = CRM_Core_DAO::singleValueQuery("SELECT max(id) FROM civicrm_navigation");
-  if (is_integer($navId)) {
-    $navId++;
-  }
-  $parentId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Navigation', 'Customize Data and Screens', 'id', 'name');
-  $params[$parentId]['child'][$navId] = array(
-    'attributes' => array (
-      'label' => ts('Hide Disabled Items Settings',array('domain' => 'biz.jmaconsulting.hidedisableditems')),
-      'name' => 'Hide Disabled Items Settings',
-      'url' => 'civicrm/hidedisabled/settings',
-      'permission' => 'access CiviCRM',
-      'operator' => 'AND',
-      'separator' => 1,
-      'parentID' => $parentId,
-      'navID' => $navId,
-      'active' => 1
-    ),
-  );
+function hidedisableditems_civicrm_navigationMenu(&$menu) {
+  _hidedisableditems_civix_insert_navigation_menu($menu, 'Administer/Customize Data and Screens', [
+    'label' => ts('Hide Disabled Items Settings', ['domain' => 'biz.jmaconsulting.hidedisableditems']),
+    'name' => 'Hide Disabled Items Settings',
+    'url' => CRM_Utils_System::url('civicrm/hidedisabled/settings', 'reset=1&action=browse', TRUE),
+    'active' => 1,
+    'has_separator' => 1,
+    'permission_operator' => 'AND',
+    'permission' => 'administer CiviCRM',
+  ]);
+  _hidedisableditems_civix_navigationMenu($menu);
 }
 
 /**

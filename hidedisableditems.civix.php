@@ -1,7 +1,76 @@
 <?php
 
 // AUTO-GENERATED FILE -- Civix may overwrite any changes made to this file
-
+/**
+ * The ExtensionUtil class provides small stubs for accessing resources of this
+ * extension.
+ */
+class CRM_HDI_ExtensionUtil {
+  const SHORT_NAME = "hidedisableditems";
+  const LONG_NAME = "biz.jmaconsulting.hidedisableditems";
+  const CLASS_PREFIX = "CRM_HDI";
+  /**
+   * Translate a string using the extension's domain.
+   *
+   * If the extension doesn't have a specific translation
+   * for the string, fallback to the default translations.
+   *
+   * @param string $text
+   *   Canonical message text (generally en_US).
+   * @param array $params
+   * @return string
+   *   Translated text.
+   * @see ts
+   */
+  public static function ts($text, $params = array()) {
+    if (!array_key_exists('domain', $params)) {
+      $params['domain'] = array(self::LONG_NAME, NULL);
+    }
+    return ts($text, $params);
+  }
+  /**
+   * Get the URL of a resource file (in this extension).
+   *
+   * @param string|NULL $file
+   *   Ex: NULL.
+   *   Ex: 'css/foo.css'.
+   * @return string
+   *   Ex: 'http://example.org/sites/default/ext/org.example.foo'.
+   *   Ex: 'http://example.org/sites/default/ext/org.example.foo/css/foo.css'.
+   */
+  public static function url($file = NULL) {
+    if ($file === NULL) {
+      return rtrim(CRM_Core_Resources::singleton()->getUrl(self::LONG_NAME), '/');
+    }
+    return CRM_Core_Resources::singleton()->getUrl(self::LONG_NAME, $file);
+  }
+  /**
+   * Get the path of a resource file (in this extension).
+   *
+   * @param string|NULL $file
+   *   Ex: NULL.
+   *   Ex: 'css/foo.css'.
+   * @return string
+   *   Ex: '/var/www/example.org/sites/default/ext/org.example.foo'.
+   *   Ex: '/var/www/example.org/sites/default/ext/org.example.foo/css/foo.css'.
+   */
+  public static function path($file = NULL) {
+    // return CRM_Core_Resources::singleton()->getPath(self::LONG_NAME, $file);
+    return __DIR__ . ($file === NULL ? '' : (DIRECTORY_SEPARATOR . $file));
+  }
+  /**
+   * Get the name of a class within this extension.
+   *
+   * @param string $suffix
+   *   Ex: 'Page_HelloWorld' or 'Page\\HelloWorld'.
+   * @return string
+   *   Ex: 'CRM_Foo_Page_HelloWorld'.
+   */
+  public static function findClass($suffix) {
+    return self::CLASS_PREFIX . '_' . str_replace('\\', '_', $suffix);
+  }
+}
+use CRM_HDI_ExtensionUtil as E;
 /**
  * (Delegated) Implementation of hook_civicrm_config
  *
@@ -259,6 +328,48 @@ function _hidedisableditems_civix_insert_navigation_menu(&$menu, $path, $item, $
       }
     }
     return $found;
+  }
+}
+
+/**
+ * (Delegated) Implements hook_civicrm_navigationMenu().
+ */
+function _hidedisableditems_civix_navigationMenu(&$nodes) {
+  if (!is_callable(array('CRM_Core_BAO_Navigation', 'fixNavigationMenu'))) {
+    _hidedisableditems_civix_fixNavigationMenu($nodes);
+  }
+}
+/**
+ * Given a navigation menu, generate navIDs for any items which are
+ * missing them.
+ */
+function _hidedisableditems_civix_fixNavigationMenu(&$nodes) {
+  $maxNavID = 1;
+  array_walk_recursive($nodes, function($item, $key) use (&$maxNavID) {
+    if ($key === 'navID') {
+      $maxNavID = max($maxNavID, $item);
+    }
+  });
+  _hidedisableditems_civix_fixNavigationMenuItems($nodes, $maxNavID, NULL);
+}
+
+function _hidedisableditems_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parentID) {
+  $origKeys = array_keys($nodes);
+  foreach ($origKeys as $origKey) {
+    if (!isset($nodes[$origKey]['attributes']['parentID']) && $parentID !== NULL) {
+      $nodes[$origKey]['attributes']['parentID'] = $parentID;
+    }
+    // If no navID, then assign navID and fix key.
+    if (!isset($nodes[$origKey]['attributes']['navID'])) {
+      $newKey = ++$maxNavID;
+      $nodes[$origKey]['attributes']['navID'] = $newKey;
+      $nodes[$newKey] = $nodes[$origKey];
+      unset($nodes[$origKey]);
+      $origKey = $newKey;
+    }
+    if (isset($nodes[$origKey]['child']) && is_array($nodes[$origKey]['child'])) {
+      _hidedisableditems_civix_fixNavigationMenuItems($nodes[$origKey]['child'], $maxNavID, $nodes[$origKey]['attributes']['navID']);
+    }
   }
 }
 
